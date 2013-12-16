@@ -1,0 +1,91 @@
+@charset 'utf-8';
+div.cm_overlay {
+    background: #333;
+    display: none;
+    height:100%;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    /*z-index: 999;*/
+
+    filter: alpha(opacity=50);
+    -moz-opacity: 0.5;
+    -webkit-opacity: 0.5;
+    opacity: 0.5;
+}
+
+div.cm_wrapper {
+    background: #fff;
+    display: none;
+    left: 50%;
+    padding:50px 30px;
+    position: absolute;
+    text-align:center;
+    top: 40%;
+    width: 450px; margin-left:-275px;
+
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+}
+div.cm_wrapper .Message {
+    margin-bottom: 50px;
+}
+div.cm_wrapper .Header {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 15px 0;
+}
+div.cm_wrapper .Text {
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 180%;
+    margin-top: 20px;
+}
+div.cm_wrapper button{
+    width:130px;
+    border: none;
+    -webkit-transition: All 0.3s ease;
+    -moz-transition: All 0.3s ease;
+    -o-transition: All 0.3s ease;
+    -ms-transition: All 0.3s ease;
+    transition: All 0.3s ease;
+
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -ms-border-radius: 3px;
+    font-size: 14px;
+    text-align: center;
+    padding: 6px 0;
+}
+div.cm_wrapper button:hover{
+    cursor: pointer;
+}
+.cm_wrapper .BtnNo{
+    border:1px solid #ccc;
+    background:#fff;
+    background-image: -webkit-linear-gradient(top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+    background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+    background-image: -o-linear-gradient(top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+    background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+    background-image: linear-gradient(top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+    margin-right:20px;
+}
+.cm_wrapper .BtnYes{
+    border:1px solid #89A222;
+    background: #89A222;
+    background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    background-image: -o-linear-gradient(top, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    background-image: -ms-linear-gradient(top, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    background-image: linear-gradient(top, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    color: #fff;
+}
+.cm_wrapper .BtnNo:hover{
+    background-color:#f5f5f5;
+}
+.cm_wrapper .BtnYes:hover{
+    background-color:#739101;
+}
