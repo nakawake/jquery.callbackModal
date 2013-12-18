@@ -86,31 +86,45 @@
             cm.wrapper.children().not(':first-child').hide();
             // Show it
             cm.wrapper.fadeIn(cm.s['speed'], cm.s.onAfterFadeIn);
+            // Put it in the center
+            cm.wrapper.css('top', calcCenter());
             // Bind close function to no buttons
             cm.wrapper.find(cm.s['noButton']).click(function(e){close();});
             // Bind process function to yes buttons
             $.each(cm.wrapper.children(), function(key, val){
                 $(this).find(cm.s['yesButton']).click(function(e){
-                    var res = cm.s.onProcesses[key]();
-                    // If true, go next or finish
-                    if(res){
-                        // If last step, go end
-                        if(key == cm.steps - 1){
-                            if(cm.s['needEndStep']){
-                                showEnd(cm.s['endMessage']);
-                            }else{
-                                close();
+                    $.when(cm.s.onProcesses[key]()).done(function(data){
+                        if(data === true
+                           || data == 'success'
+                           || data == 'ok'
+                           || typeof data.success != 'undefined'
+                           || typeof data.ok != 'undefined'
+                        ){
+                            res = true;
+                        }else{
+                            res = false;
+                        }
+                        
+                        // If true, go next or finish
+                        if(res){
+                            // If last step, go end
+                            if(key == cm.steps - 1){
+                                if(cm.s['needEndStep']){
+                                    showEnd(cm.s['endMessage']);
+                                }else{
+                                    close();
+                                }
+                            }
+                            // If it's not last step, go next
+                            else{
+                                showNext();
                             }
                         }
-                        // If it's not last step, go next
+                        // If false, show error messages
                         else{
-                            showNext();
+                            showError(cm.s['errorMessages'][key]);
                         }
-                    }
-                    // If false, show error messages
-                    else{
-                        showError(cm.s['errorMessages'][key]);
-                    }
+                    });
                 });
             });
         };
@@ -167,6 +181,10 @@
          */
         var rewind = function(){
             cm.stepCounter = 0;
+        }
+        
+        var calcCenter = function(){
+            return ($(window).height() - cm.wrapper.height()) * 0.5;
         }
 
         /**
