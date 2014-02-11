@@ -18,11 +18,14 @@
             noButton:       '.no',    // Required
             speed:          'normal',
             needEndStep:    true,
+            width:          0,
+            clone:          true,
             endMessage:     'Process finished.',
             errorMessages:  ['Error happend.'],
             // Callbacks
+            onBeforeFadeIn: function(element){ return true;},
             onAfterFadeIn:  function(){},
-            onAfterFadeOut: function(){},
+            onAfterFadeOut: function(result){ return result;},
             onProcesses:    [function(){}],
             onHoge:         function(){}
         };
@@ -31,6 +34,9 @@
             el = element;
         // Settings
         cm.s = {};
+        cm.el;
+        cm.isScrollLocked = false;
+        cm.scrollPositioin = {top:0, left:0};
 
         /**
          * private
@@ -50,13 +56,45 @@
             }
             // Step counter
             cm.stepCounter = 0;
+            // Result of All processes
+            cm.result = false;
 
-            $(el).click(function(e){
+            var handler = function(e){
                 e.preventDefault();
+                var _this = this; // This is element you clicked.
+                cm.el = _this; // Set current element to cm.el.
+
                 rewind();
-                showOverlay();
-                showContent();
-            });
+                $.when(cm.s.onBeforeFadeIn(_this)).done(function(data){
+                    if(data === true
+                       || data == 'success'
+                       || data == 'ok'
+                       || data.hasOwnProperty('success')
+                       || data.hasOwnProperty('ok')
+                       || data.hasOwnProperty('result')
+                      ){
+                        showOverlay();
+                        showContent();
+                    }else{
+                        //console.log(data);
+                    }
+                });
+            }
+
+            var dom = $(el).parents().map(function(){
+                if(this.className){
+                    var pattern = /\s/g;
+                    var className = '.' + this.className.replace(pattern, '.');
+                }else{
+                    var className = '';
+                }
+                return this.tagName + className;
+            }).get().reverse().join(' ') + ' ' + el.get(0).tagName;
+
+            //$(document).off('click', dom, handler); // To avoid to bind multiple event.I don't know why the handler isn't applied
+            $(document).off('click', dom);
+            $(document).on('click', dom, handler);
+
         };
 
         /**
@@ -64,6 +102,7 @@
          * Show Layer
          */
         var showOverlay = function(){
+            if($('.cm_overlay').length > 0) return false;
             // Create a overlay
             cm.overlay = $('<div class="cm_overlay" />');
             $('body').append(cm.overlay);
@@ -71,6 +110,9 @@
             cm.overlay.fadeIn(cm.s['speed']);
             // Bind close event
             cm.overlay.click(function(e){close();});
+
+            // Lock Scrolling
+            lockScroll();
         };
 
         /**
@@ -78,9 +120,18 @@
          * Show Content as a modal.
          */
         var showContent = function(){
+            if($('.cm_wrapper').length > 0) return false;
+
             // Create a wrapper and modal
             cm.wrapper = $('<div class="cm_wrapper" />');
-            $(cm.s['modal']).children().clone().appendTo(cm.wrapper);
+            if(cm.s['width'] > 0){
+                cm.wrapper.css('width', cm.s['width']);
+            }
+            if(cm.s['clone']){
+                $(cm.s['modal']).children().clone(true).appendTo(cm.wrapper);
+            }else{
+                $(cm.s['modal']).children().appendTo(cm.wrapper);
+            }
             $('body').append(cm.wrapper);
             // Hide them without first step
             cm.wrapper.children().not(':first-child').hide();
@@ -93,18 +144,23 @@
             // Bind process function to yes buttons
             $.each(cm.wrapper.children(), function(key, val){
                 $(this).find(cm.s['yesButton']).click(function(e){
-                    $.when(cm.s.onProcesses[key]()).done(function(data){
+                    $.when(cm.s.onProcesses[key](cm.el)).done(function(data){
+                        if(data == null || typeof data == 'undefined'){
+                            return;
+                        }
+
                         if(data === true
                            || data == 'success'
                            || data == 'ok'
-                           || typeof data.success != 'undefined'
-                           || typeof data.ok != 'undefined'
+                           || data.hasOwnProperty('success')
+                           || data.hasOwnProperty('ok')
+                           || data.hasOwnProperty('result')
                         ){
                             res = true;
                         }else{
                             res = false;
                         }
-                        
+
                         // If true, go next or finish
                         if(res){
                             // If last step, go end
@@ -112,6 +168,7 @@
                                 if(cm.s['needEndStep']){
                                     showEnd(cm.s['endMessage']);
                                 }else{
+                                    cm.result = true;
                                     close();
                                 }
                             }
@@ -136,13 +193,44 @@
         var close = function(){
             cm.overlay.fadeOut(cm.s['speed']);
             cm.wrapper.fadeOut(cm.s['speed'], function(){
+                if(!cm.s['clone']){
+                    cm.wrapper.children().appendTo(cm.s['modal']);
+                }
                 // Do function after fadeout
-                cm.s.onAfterFadeOut();
+                cm.s.onAfterFadeOut(cm.result);
                 // Remove themselves
                 cm.overlay.remove();
                 cm.wrapper.remove();
                 cm.overlay = cm.wrapper = null;
+
+                UnlockScroll();
             });
+        };
+        /**
+         * Lock scroll
+         */
+        var lockScroll = function(){
+            cm.scrollPosition = {
+                top: $(window).scrollTop(),
+                left: $(window).scrollLeft()
+            }
+            cm.isScrollLocked = true;
+            $('body').css('overflow', 'hidden');
+            $(window).scroll(lockScrollHandler);
+        };
+        /**
+         * Lock scroll handler
+         */
+        var lockScrollHandler = function(){
+            $(this).scrollTop(cm.scrollPosition.top).scrollLeft(cm.scrollPosition.left);
+        }
+        /**
+         * Unlock scroll
+         */
+        var UnlockScroll = function(){
+            cm.isScrollLocked = false;
+            $('body').css('overflow', 'auto');
+            $(window).unbind('scroll', lockScrollHandler);
         };
 
         /**
@@ -182,9 +270,9 @@
         var rewind = function(){
             cm.stepCounter = 0;
         }
-        
+
         var calcCenter = function(){
-            return ($(window).height() - cm.wrapper.height()) * 0.5;
+            return ($(window).height() - cm.wrapper.innerHeight()) * 0.5;
         }
 
         /**
